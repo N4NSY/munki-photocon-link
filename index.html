@@ -33,23 +33,25 @@
       isolation: isolate;
     }
 
-    /* 背景ポスター */
+    /* 背景ポスター
+       PCでは縦長ポスターを横幅いっぱいにcoverせず、
+       画面の高さを基準に表示して過度な拡大を防ぐ。 */
     body::before {
       content: "";
       position: fixed;
-      inset: -18px;
+      inset: -12px;
       background-image: url("./wait-poster.png");
-      background-size: cover;
-      background-position: center center;
+      background-size: auto 118vh;
+      background-position: center 42%;
       background-repeat: no-repeat;
-      opacity: 0.20;
-      filter: blur(5px);
-      transform: scale(1.03);
+      opacity: 0.28;
+      filter: blur(3px);
       z-index: 0;
       pointer-events: none;
     }
 
-    /* 背景を暗くして文字を読みやすくする */
+    /* 背景を暗くして文字を読みやすくする。
+       以前より暗幕を弱め、ポスターの存在感を残す。 */
     body::after {
       content: "";
       position: fixed;
@@ -57,9 +59,9 @@
       background:
         radial-gradient(
           circle at center,
-          rgba(0, 0, 0, 0.38) 0%,
-          rgba(0, 0, 0, 0.72) 72%,
-          rgba(0, 0, 0, 0.84) 100%
+          rgba(0, 0, 0, 0.20) 0%,
+          rgba(0, 0, 0, 0.58) 76%,
+          rgba(0, 0, 0, 0.72) 100%
         );
       z-index: 1;
       pointer-events: none;
@@ -167,11 +169,26 @@
       main {
         padding: 28px 20px 26px;
         border-radius: 15px;
+        background: rgba(20, 20, 20, 0.76);
       }
 
+      /* スマホではポスターをPCより濃く表示 */
       body::before {
-        background-position: center 38%;
-        opacity: 0.18;
+        inset: -8px;
+        background-size: auto 106svh;
+        background-position: center 42%;
+        opacity: 0.38;
+        filter: blur(2px);
+      }
+
+      body::after {
+        background:
+          radial-gradient(
+            circle at center,
+            rgba(0, 0, 0, 0.12) 0%,
+            rgba(0, 0, 0, 0.44) 72%,
+            rgba(0, 0, 0, 0.58) 100%
+          );
       }
     }
 
