@@ -1,0 +1,13 @@
+当日チェックリスト
+
+□ Xの告知文を事前に下書きしておく
+□ ワールド内ポスターのQRを実機スマホで読み取り確認
+□ QRが https://n4nsy.github.io/munki-photocon-link/ を開くことを確認
+□ 公開前に「まだ公開前です」と表示されることを確認
+□ 集会終了時にXへ告知投稿
+□ Xのstatus URLをコピー
+□ GitHubのconfig.jsonを編集
+□ released を true にする
+□ tweetUrl にXのstatus URLを貼る
+□ Commit changes
+□ 固定ページで「今すぐ再確認」を押し、Xへ飛ぶことを確認
