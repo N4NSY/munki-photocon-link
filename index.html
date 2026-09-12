@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>むんきちゃんフォトコン</title>
+
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif;
+      background: #111;
+      color: #f5f5f5;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      position: relative;
+      overflow-x: hidden;
+      background: #111;
+    }
+
+    /* 背景ポスター */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -18px;
+      background-image: url("./wait-poster.png");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: 0.20;
+      filter: blur(5px);
+      transform: scale(1.03);
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    /* 背景を暗くして文字を読みやすくする */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(0, 0, 0, 0.38) 0%,
+          rgba(0, 0, 0, 0.72) 72%,
+          rgba(0, 0, 0, 0.84) 100%
+        );
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    main {
+      width: min(560px, 100%);
+      padding: 34px 26px 30px;
+      text-align: center;
+      background: rgba(20, 20, 20, 0.80);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 18px;
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .eyebrow {
+      margin-bottom: 8px;
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      color: rgba(255, 255, 255, 0.56);
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: clamp(25px, 6vw, 38px);
+      line-height: 1.28;
+      letter-spacing: 0.02em;
+    }
+
+    p {
+      margin: 10px 0;
+      line-height: 1.8;
+      color: #dedede;
+    }
+
+    #message {
+      min-height: 3.6em;
+    }
+
+    .status {
+      margin: 24px 0 18px;
+      padding: 14px 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 11px;
+      background: rgba(255,255,255,0.07);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    button,
+    a.button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 12px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      border-radius: 10px;
+      background: #f5f5f5;
+      color: #111;
+      text-decoration: none;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease;
+    }
+
+    button:hover,
+    a.button:hover {
+      transform: translateY(-1px);
+      background: #fff;
+    }
+
+    button:active,
+    a.button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: default;
+      transform: none;
+    }
+
+    .small {
+      margin-top: 20px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.48);
+    }
+
+    #tweetLink {
+      display: none;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 18px;
+      }
+
+      main {
+        padding: 28px 20px 26px;
+        border-radius: 15px;
+      }
+
+      body::before {
+        background-position: center 38%;
+        opacity: 0.18;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      button,
+      a.button {
+        transition: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <div class="eyebrow">MUNKI PHOTO CONTEST</div>
+
+    <h1>むんきちゃん<br>フォトコンテスト</h1>
+
+    <p id="message">公開状況を確認しています。</p>
+
+    <div class="status" id="status">確認中…</div>
+
+    <button id="checkButton" type="button">今すぐ再確認</button>
+
+    <br>
+
+    <a id="tweetLink" class="button" href="#" rel="noopener noreferrer">
+      告知ポストを開く
+    </a>
+
+    <p class="small">
+      告知公開後、このページからXの告知ポストへ移動します。
+    </p>
+  </main>
+
+  <script>
+    (() => {
+      const GITHUB_OWNER = "N4NSY";
+      const GITHUB_REPO  = "munki-photocon-link";
+      const CONFIG_PATH  = "config.json";
+
+      const AUTO_CHECK_MS = 65000;
+
+      const apiUrl =
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${CONFIG_PATH}?ref=main`;
+
+      const messageEl   = document.getElementById("message");
+      const statusEl    = document.getElementById("status");
+      const checkButton = document.getElementById("checkButton");
+      const tweetLink   = document.getElementById("tweetLink");
+
+      let checking = false;
+      let redirectScheduled = false;
+
+      function isAllowedTweetUrl(url) {
+        try {
+          const u = new URL(url);
+
+          return (
+            u.protocol === "https:" &&
+            (
+              u.hostname === "x.com" ||
+              u.hostname === "www.x.com" ||
+              u.hostname === "twitter.com" ||
+              u.hostname === "www.twitter.com"
+            )
+          );
+        } catch {
+          return false;
+        }
+      }
+
+      async function fetchConfigFromGitHub() {
+        const res = await fetch(
+          apiUrl + `&t=${Date.now()}`,
+          {
+            method: "GET",
+            headers: {
+              "Accept": "application/vnd.github.raw+json"
+            },
+            cache: "no-store"
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`GitHub API: HTTP ${res.status}`);
+        }
+
+        return JSON.parse(await res.text());
+      }
+
+      async function fetchConfigFallback() {
+        const res = await fetch(
+          `./config.json?t=${Date.now()}`,
+          { cache: "no-store" }
+        );
+
+        if (!res.ok) {
+          throw new Error(`Pages config: HTTP ${res.status}`);
+        }
+
+        return await res.json();
+      }
+
+      async function getConfig() {
+        try {
+          return await fetchConfigFromGitHub();
+        } catch (apiError) {
+          console.warn(
+            "GitHub APIから取得できなかったため、Pages上のconfig.jsonを確認します。",
+            apiError
+          );
+
+          return await fetchConfigFallback();
+        }
+      }
+
+      async function checkRelease() {
+        if (checking) return;
+
+        checking = true;
+        checkButton.disabled = true;
+        statusEl.textContent = "確認中…";
+
+        try {
+          const config = await getConfig();
+
+          const released = config.released === true;
+
+          const tweetUrl =
+            typeof config.tweetUrl === "string"
+              ? config.tweetUrl.trim()
+              : "";
+
+          const waitMessage =
+            typeof config.message === "string" &&
+            config.message.trim()
+              ? config.message.trim()
+              : "むんきちゃんフォトコンの詳細は、集会終了後に公開します。";
+
+          if (released && isAllowedTweetUrl(tweetUrl)) {
+            messageEl.textContent =
+              "告知を公開しました。Xへ移動します。";
+
+            statusEl.textContent = "公開済み";
+
+            tweetLink.href = tweetUrl;
+            tweetLink.style.display = "inline-block";
+
+            if (!redirectScheduled) {
+              redirectScheduled = true;
+
+              setTimeout(() => {
+                window.location.replace(tweetUrl);
+              }, 900);
+            }
+
+          } else {
+            messageEl.textContent = waitMessage;
+            statusEl.textContent = "まだ公開前です";
+            tweetLink.style.display = "none";
+          }
+
+        } catch (error) {
+          console.error(error);
+
+          messageEl.textContent =
+            "公開状況の取得に失敗しました。少し時間を置いて再確認してください。";
+
+          statusEl.textContent = "取得エラー";
+          tweetLink.style.display = "none";
+
+        } finally {
+          checking = false;
+          checkButton.disabled = false;
+        }
+      }
+
+      checkButton.addEventListener("click", checkRelease);
+
+      checkRelease();
+      setInterval(checkRelease, AUTO_CHECK_MS);
+    })();
+  </script>
+</body>
+</html>
